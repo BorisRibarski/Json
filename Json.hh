@@ -36,26 +36,9 @@ class Json {
             ref = v;
             return *this;
         }
-        Value& operator=(const char* v) {
-            ref = std::string(v);
-            return *this;
-        }
-        Value& operator=(const Json& js) {
-            ref = std::make_shared<Json>(js);
-            return *this;
-        }
-        Value operator[](const std::string& key) {
-            if (std::holds_alternative<std::monostate>(ref)) {
-                ref = std::make_shared<Json>();
-            }
-            if (auto* ptr = std::get_if<std::shared_ptr<Json>>(&ref)) {
-                if (!*ptr) {
-                    *ptr = std::make_shared<Json>();
-                }
-                return (**ptr)[key];
-            }
-            return Value(s_mutable_null_value);
-        }
+        Value& operator=(const char* v);
+        Value& operator=(const Json& js);
+        Value operator[](const std::string& key);
 
         template <typename T>
         operator T() const {
@@ -69,16 +52,7 @@ class Json {
       public:
         explicit ConstValue(const value_type& v) : ref(v) {
         }
-        ConstValue operator[](const std::string& key) const {
-            if (const auto* ptr =
-                    std::get_if<std::shared_ptr<Json>>(&ref)) {
-                if (*ptr) {
-                    const Json& inner = **ptr;
-                    return ConstValue(inner[key]);
-                }
-            }
-            return ConstValue(s_null_value);
-        }
+        ConstValue operator[](const std::string& key) const;
         template <typename T>
         operator T() const {
             if (const auto* ptr = std::get_if<T>(&ref)) {
@@ -89,14 +63,6 @@ class Json {
     };
 
   public:
-    Value operator[](const std::string key) {
-        return Value(map[key]);
-    }
-    ConstValue operator[](const std::string key) const {
-        auto it = map.find(key);
-        if (it == map.end()) {
-            // throw
-        }
-        return ConstValue(it->second);
-    }
+    Value operator[](const std::string key);
+    ConstValue operator[](const std::string key) const;
 };
